@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Real Estate Investment Analysis: SF Bay Area</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Muted Teal and Slate -->
+    <!-- Application Structure Plan: The application is designed as a single-page, scrollable dashboard with a sticky top navigation for easy access to key sections. The structure prioritizes user understanding by first presenting high-level summary metrics (KPIs), then allowing a deeper dive into the investment phases: Initial Outlay, 10-Year Journey, and Final Sale/Returns. This non-linear but guided flow is more intuitive than a traditional report, enabling users to quickly grasp the core outcomes and then explore the underlying data through interactive charts and tables. The final sections cover qualitative aspects like risks and strategies. -->
+    <!-- Visualization & Content Choices: Data from the report is translated into dynamic visualizations to achieve specific goals. Goal: Inform/Breakdown -> Donut Chart for initial outlay, KPI Cards for key metrics. Justification: Quickly shows proportional costs and highlights final returns. Goal: Show Change/Compare -> Line charts for cash flow (pre vs. post-tax) and property value vs. debt; Stacked Area chart for equity build-up. Justification: These are ideal for showing trends over the 10-year period and comparing different financial levers. Goal: Breakdown a Total -> A horizontal bar chart visualizes the sale proceeds breakdown. Justification: Clearly illustrates how the final sale price is reduced by costs/taxes to arrive at net profit. Library: All charts use Chart.js on Canvas. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 320px;
+            max-height: 40vh;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .kpi-card {
+            background-color: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            border: 1px solid #e5e7eb;
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .kpi-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .nav-link {
+             padding: 0.5rem 1rem;
+             border-radius: 0.375rem;
+             transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+             font-weight: 500;
+        }
+        .nav-link:hover, .nav-link.active {
+            background-color: #f0fdfa; /* teal-50 */
+            color: #134e4a; /* teal-900 */
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <!-- Header & Navigation -->
+    <header class="bg-white/80 backdrop-blur-lg sticky top-0 z-50 shadow-sm border-b border-slate-200">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl font-bold text-slate-900">Real Estate Return Analysis</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#summary" class="nav-link text-slate-600">Summary</a>
+                        <a href="#investment" class="nav-link text-slate-600">Investment</a>
+                        <a href="#projections" class="nav-link text-slate-600">Projections</a>
+                        <a href="#sale" class="nav-link text-slate-600">Sale & Returns</a>
+                        <a href="#risks" class="nav-link text-slate-600">Risks & Strategy</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+
+        <!-- Summary Section -->
+        <section id="summary" class="mb-16 scroll-mt-24">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-teal-800 mb-4">Investment Snapshot: 10-Year Total Return</h2>
+                <p class="max-w-3xl mx-auto text-lg text-slate-600">
+                    This is an analysis of a $1,000,000 SF Bay Area rental property held for 10 years. Despite an initial negative cash flow, the investment leverages 7% annual appreciation and tax benefits to achieve a strong projected return. Below are the key performance indicators.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                <div class="kpi-card">
+                    <h3 class="text-lg font-semibold text-slate-500 mb-2">Internal Rate of Return (IRR)</h3>
+                    <p class="text-5xl font-bold text-teal-600">15.6%</p>
+                </div>
+                <div class="kpi-card">
+                    <h3 class="text-lg font-semibold text-slate-500 mb-2">Equity Multiple (EM)</h3>
+                    <p class="text-5xl font-bold text-teal-600">2.97x</p>
+                </div>
+                <div class="kpi-card">
+                    <h3 class="text-lg font-semibold text-slate-500 mb-2">Total Net Profit</h3>
+                    <p class="text-5xl font-bold text-teal-600">$1.02M</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Initial Investment Section -->
+        <section id="investment" class="mb-16 py-12 bg-white rounded-lg shadow-md scroll-mt-24">
+             <div class="max-w-4xl mx-auto px-4">
+                <h2 class="text-3xl font-bold text-center mb-4 text-teal-800">The Initial Investment</h2>
+                <p class="text-center text-slate-600 mb-10 max-w-2xl mx-auto">
+                    The foundation of any investment is the initial capital required. For a $1,000,000 property with a 30% down payment, the total cash needed includes the down payment, closing costs, and a budget for initial renovations.
+                </p>
+                <div class="grid md:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <h3 class="text-xl font-semibold mb-4 text-slate-700">Purchase & Loan Breakdown</h3>
+                        <ul class="space-y-3 text-lg">
+                            <li class="flex justify-between items-center bg-slate-50 p-3 rounded-md">
+                                <span class="font-medium text-slate-600">Purchase Price:</span>
+                                <span class="font-bold text-slate-900">$1,000,000</span>
+                            </li>
+                            <li class="flex justify-between items-center bg-slate-50 p-3 rounded-md">
+                                <span class="font-medium text-slate-600">Down Payment (30%):</span>
+                                <span class="font-bold text-slate-900">$300,000</span>
+                            </li>
+                             <li class="flex justify-between items-center bg-slate-50 p-3 rounded-md">
+                                <span class="font-medium text-slate-600">Loan Amount:</span>
+                                <span class="font-bold text-slate-900">$700,000</span>
+                            </li>
+                        </ul>
+                        <h3 class="text-xl font-semibold mt-6 mb-4 text-slate-700">Total Initial Cash Outlay</h3>
+                        <div class="bg-teal-50 border-l-4 border-teal-500 p-4 rounded-r-md">
+                            <div class="flex justify-between items-center text-xl">
+                                <span class="font-bold text-teal-900">Total Required:</span>
+                                <span class="font-extrabold text-teal-700">$340,000</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="chart-container h-64 md:h-80">
+                            <canvas id="initialOutlayChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- 10-Year Projections -->
+        <section id="projections" class="mb-16 scroll-mt-24">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-teal-800 mb-4">The 10-Year Journey</h2>
+                <p class="max-w-3xl mx-auto text-lg text-slate-600">
+                   Over the decade, the investment's financial picture evolves. While starting with a negative pre-tax cash flow, tax benefits offer significant relief. Simultaneously, equity grows from both principal paydown and market appreciation, dramatically increasing the investor's net worth in the asset.
+                </p>
+            </div>
+            <div class="space-y-12">
+                <!-- Cash Flow Chart -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-bold mb-1 text-center">Annual Cash Flow: Pre-Tax vs. After-Tax</h3>
+                     <p class="text-center text-sm text-slate-500 mb-4">See how tax savings offset the initial monthly deficit over time.</p>
+                    <div class="chart-container">
+                        <canvas id="cashFlowChart"></canvas>
+                    </div>
+                </div>
+                <!-- Equity Buildup Chart -->
+                 <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-bold mb-1 text-center">Equity Build-Up Over 10 Years</h3>
+                    <p class="text-center text-sm text-slate-500 mb-4">Watch your equity grow through appreciation and paying down the mortgage.</p>
+                    <div class="chart-container">
+                        <canvas id="equityBuildupChart"></canvas>
+                    </div>
+                </div>
+                <!-- Value vs Debt Chart -->
+                 <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-bold mb-1 text-center">Property Value vs. Remaining Loan Balance</h3>
+                    <p class="text-center text-sm text-slate-500 mb-4">The widening gap between asset value and debt is the core of wealth creation.</p>
+                    <div class="chart-container">
+                        <canvas id="valueVsDebtChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sale & Total Returns Section -->
+        <section id="sale" class="mb-16 py-12 bg-white rounded-lg shadow-md scroll-mt-24">
+            <div class="max-w-4xl mx-auto px-4">
+                <h2 class="text-3xl font-bold text-center mb-4 text-teal-800">The Payoff: Sale at Year 10</h2>
+                 <p class="text-center text-slate-600 mb-10 max-w-2xl mx-auto">
+                    At the end of the 10-year hold, the property is sold. The final return is calculated after paying off the remaining mortgage, covering all selling costs, and settling the tax liabilities from capital gains and depreciation recapture.
+                </p>
+                <div class="grid md:grid-cols-2 gap-8 items-center">
+                    <div>
+                         <h3 class="text-xl font-semibold mb-4 text-slate-700">Sale Proceeds Breakdown</h3>
+                         <div class="chart-container h-80">
+                            <canvas id="saleBreakdownChart"></canvas>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="bg-slate-50 p-6 rounded-lg border">
+                             <h3 class="text-xl font-semibold mb-4 text-slate-700">Final Calculation</h3>
+                             <ul class="space-y-3 text-lg">
+                                <li class="flex justify-between items-center">
+                                    <span class="font-medium text-slate-600">Projected Sale Price:</span>
+                                    <span class="font-semibold text-slate-800">$1,967,150</span>
+                                </li>
+                                <li class="flex justify-between items-center border-t pt-3">
+                                    <span class="font-medium text-slate-600 text-red-600">- Total Selling Costs:</span>
+                                    <span class="font-semibold text-red-600">($137,701)</span>
+                                </li>
+                                <li class="flex justify-between items-center">
+                                    <span class="font-medium text-slate-600 text-red-600">- Mortgage Payoff:</span>
+                                    <span class="font-semibold text-red-600">($593,076)</span>
+                                </li>
+                                <li class="flex justify-between items-center border-b pb-3">
+                                    <span class="font-medium text-slate-600 text-red-600">- Total Taxes on Sale:</span>
+                                    <span class="font-semibold text-red-600">($212,043)</span>
+                                </li>
+                                <li class="flex justify-between items-center text-xl mt-3">
+                                    <span class="font-bold text-teal-900">Net Cash from Sale:</span>
+                                    <span class="font-extrabold text-teal-700">$1,024,331</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                            <h4 class="font-semibold text-blue-800">Tax Deferral Strategy</h4>
+                            <p class="text-blue-700 text-sm">An investor could potentially defer taxes on the sale (both capital gains and depreciation recapture) by using a 1031 Exchange to roll the proceeds into a new "like-kind" investment property.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Risks and Strategy -->
+        <section id="risks" class="scroll-mt-24">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-teal-800 mb-4">Risks & Strategic Insights</h2>
+                 <p class="max-w-3xl mx-auto text-lg text-slate-600">
+                    While the projections are positive, real estate investing carries inherent risks. Success depends on proactive management, careful financial planning, and an awareness of market dynamics.
+                </p>
+            </div>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-lg shadow-md border border-amber-200">
+                    <h3 class="text-2xl font-bold mb-4 text-amber-700">Key Risks & Considerations</h3>
+                    <ul class="space-y-4">
+                        <li class="flex items-start">
+                            <span class="text-amber-500 font-bold mr-3 mt-1">&#9650;</span>
+                            <div>
+                                <h4 class="font-semibold">Appreciation Rate Sensitivity</h4>
+                                <p class="text-slate-600">The 7% appreciation rate is an assumption. A lower rate would significantly reduce returns. Markets are cyclical.</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-amber-500 font-bold mr-3 mt-1">&#9650;</span>
+                             <div>
+                                <h4 class="font-semibold">Liquidity Requirements</h4>
+                                <p class="text-slate-600">The ongoing negative cash flow requires the investor to have sufficient liquid reserves to cover shortfalls for years.</p>
+                            </div>
+                        </li>
+                         <li class="flex items-start">
+                            <span class="text-amber-500 font-bold mr-3 mt-1">&#9650;</span>
+                             <div>
+                                <h4 class="font-semibold">Unforeseen Expenses</h4>
+                                <p class="text-slate-600">Major capital expenditures (e.g., roof, HVAC) are not in the operating budget and can impact cash flow significantly.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                 <div class="bg-white p-6 rounded-lg shadow-md border border-sky-200">
+                    <h3 class="text-2xl font-bold mb-4 text-sky-700">Strategic Recommendations</h3>
+                    <ul class="space-y-4">
+                        <li class="flex items-start">
+                           <span class="text-sky-500 font-bold mr-3 mt-1">&#10003;</span>
+                           <div>
+                                <h4 class="font-semibold">Proactive Management</h4>
+                                <p class="text-slate-600">Optimize cash flow by managing expenses and implementing gradual rent increases. Perform preventative maintenance.</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-sky-500 font-bold mr-3 mt-1">&#10003;</span>
+                             <div>
+                                <h4 class="font-semibold">Meticulous Tax Planning</h4>
+                                <p class="text-slate-600">Work with a tax professional. Keep detailed records to maximize deductions and plan your exit strategy (e.g., 1031 exchange) in advance.</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-sky-500 font-bold mr-3 mt-1">&#10003;</span>
+                             <div>
+                                <h4 class="font-semibold">Maintain a Contingency Fund</h4>
+                                <p class="text-slate-600">A healthy cash reserve is crucial to cover vacancies, unexpected repairs, and cash flow shortfalls, ensuring long-term stability.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-slate-800 text-slate-300 mt-16">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center">
+            <p>This is an interactive financial projection based on the provided report data. All figures are estimates and subject to market risks and changes in financial conditions.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // --- DATA FROM REPORT ---
+            const investmentData = {
+                initialOutlay: {
+                    downPayment: 300000,
+                    closingCosts: 35000,
+                    renovations: 5000,
+                },
+                annualProjections: {
+                    years: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                    cfbt: [-12000.00, -10849.08, -9663.63, -8442.62, -7184.98, -5889.61, -4555.38, -3181.13, -1765.64, -307.69],
+                    taxSavings: [7906.05, 7499.91, 7081.86, 6651.53, 6208.53, 5752.50, 5282.94, 4799.52, 4301.76, 3789.24],
+                    principalPaidCumulative: [8394.00, 17261.64, 26616.03, 36470.73, 46839.77, 57737.68, 69179.48, 81178.72, 93755.48, 106924.38],
+                    propertyValue: [1070000, 1144900, 1225043, 1310796, 1402552, 1500730, 1605781, 1718186, 1838459, 1967151],
+                    loanBalance: [691606.00, 682738.36, 673383.97, 663529.27, 653160.23, 642262.32, 630820.52, 618821.28, 606244.52, 593075.62],
+                },
+                saleData: {
+                    salePrice: 1967150,
+                    sellingCosts: 137701,
+                    mortgagePayoff: 593076,
+                    taxesOnSale: 212043,
+                }
+            };
+
+            const afterTaxCashFlow = investmentData.annualProjections.cfbt.map((cf, i) => cf + investmentData.annualProjections.taxSavings[i]);
+            
+            // --- UTILITY FUNCTIONS ---
+            const formatCurrency = (value) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
+
+            // --- CHART CONFIGURATIONS ---
+            const defaultChartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += formatCurrency(context.parsed.y);
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        ticks: {
+                            callback: function(value, index, ticks) {
+                                return formatCurrency(value);
+                            }
+                        },
+                        grid: {
+                            color: '#e5e7eb'
+                        }
+                    },
+                    x: {
+                         grid: {
+                            display: false
+                        }
+                    }
+                }
+            };
+            
+            // --- CHART INITIALIZATIONS ---
+
+            // 1. Initial Outlay Chart
+            const initialOutlayCtx = document.getElementById('initialOutlayChart').getContext('2d');
+            new Chart(initialOutlayCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Down Payment', 'Closing Costs', 'Renovations'],
+                    datasets: [{
+                        label: 'Initial Cash Outlay',
+                        data: [
+                            investmentData.initialOutlay.downPayment,
+                            investmentData.initialOutlay.closingCosts,
+                            investmentData.initialOutlay.renovations
+                        ],
+                        backgroundColor: ['#0d9488' /* teal-600 */, '#0f766e' /* teal-700 */, '#115e59' /* teal-800 */],
+                        borderColor: '#ffffff',
+                        borderWidth: 2,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                         legend: {
+                            position: 'bottom',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ${formatCurrency(context.raw)}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 2. Cash Flow Chart
+            const cashFlowCtx = document.getElementById('cashFlowChart').getContext('2d');
+            new Chart(cashFlowCtx, {
+                type: 'line',
+                data: {
+                    labels: investmentData.annualProjections.years.map(y => `Year ${y}`),
+                    datasets: [{
+                        label: 'Cash Flow Before Tax',
+                        data: investmentData.annualProjections.cfbt,
+                        borderColor: '#f43f5e', // rose-500
+                        backgroundColor: '#f43f5e20',
+                        tension: 0.3,
+                        fill: false
+                    }, {
+                        label: 'Cash Flow After Tax Savings',
+                        data: afterTaxCashFlow,
+                        borderColor: '#14b8a6', // teal-500
+                        backgroundColor: '#14b8a620',
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: defaultChartOptions
+            });
+            
+            // 3. Equity Buildup Chart
+            const equityCtx = document.getElementById('equityBuildupChart').getContext('2d');
+            new Chart(equityCtx, {
+                type: 'line',
+                data: {
+                    labels: investmentData.annualProjections.years.map(y => `Year ${y}`),
+                    datasets: [{
+                        label: 'Appreciation',
+                        data: investmentData.annualProjections.propertyValue.map(v => v - 1000000),
+                        backgroundColor: '#a7f3d0', // emerald-200
+                        borderColor: '#10b981', // emerald-500
+                        fill: 'start',
+                        stack: 'combined'
+                    }, {
+                        label: 'Principal Paydown',
+                        data: investmentData.annualProjections.principalPaidCumulative,
+                        backgroundColor: '#67e8f9', // cyan-300
+                        borderColor: '#0891b2', // cyan-600
+                        fill: 'stack',
+                        stack: 'combined'
+                    },
+                    {
+                        label: 'Initial Equity (Down Payment)',
+                        data: Array(10).fill(investmentData.initialOutlay.downPayment),
+                        backgroundColor: '#a5b4fc', // indigo-300
+                        borderColor: '#4f46e5', // indigo-600
+                        fill: 'stack',
+                        stack: 'combined'
+                    }]
+                },
+                options: { ...defaultChartOptions,
+                    scales: {
+                        y: { ...defaultChartOptions.scales.y, stacked: true },
+                        x: { ...defaultChartOptions.scales.x }
+                    },
+                    elements: { line: { tension: 0.4 }, point: { radius: 0 } }
+                }
+            });
+
+            // 4. Value vs Debt Chart
+            const valueVsDebtCtx = document.getElementById('valueVsDebtChart').getContext('2d');
+            new Chart(valueVsDebtCtx, {
+                type: 'line',
+                data: {
+                     labels: investmentData.annualProjections.years.map(y => `Year ${y}`),
+                     datasets: [{
+                        label: 'Property Value',
+                        data: investmentData.annualProjections.propertyValue,
+                        borderColor: '#22c55e', // green-500
+                        tension: 0.3,
+                     },{
+                        label: 'Loan Balance',
+                        data: investmentData.annualProjections.loanBalance,
+                        borderColor: '#ef4444', // red-500
+                        tension: 0.3,
+                     }]
+                },
+                options: defaultChartOptions
+            });
+            
+            // 5. Sale Breakdown Chart
+            const saleCtx = document.getElementById('saleBreakdownChart').getContext('2d');
+            const netProceeds = investmentData.saleData.salePrice - investmentData.saleData.sellingCosts - investmentData.saleData.mortgagePayoff;
+            const netProfit = netProceeds - investmentData.saleData.taxesOnSale;
+            new Chart(saleCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Sale Price', 'Proceeds after Costs', 'Net Cash after Taxes'],
+                    datasets: [{
+                        label: 'Sale Breakdown',
+                        data: [
+                            investmentData.saleData.salePrice,
+                            netProceeds,
+                            netProfit
+                        ],
+                        backgroundColor: ['#14b8a6', '#f59e0b', '#10b981'],
+                        borderColor: ['#0f766e', '#d97706', '#059669'],
+                        borderWidth: 1,
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                     responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: defaultChartOptions.plugins.tooltip
+                    },
+                     scales: {
+                        x: {
+                             ticks: { callback: (value) => formatCurrency(value) },
+                             grid: { color: '#e5e7eb' }
+                        },
+                        y: { grid: { display: false } }
+                    }
+                }
+            });
+
+            // --- NAVIGATION INTERACTIVITY ---
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('section');
+
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.3
+            };
+
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if(entry.isIntersecting) {
+                        navLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if(link.getAttribute('href').substring(1) === entry.target.id) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            }, observerOptions);
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+        });
+    </script>
+</body>
+</html>
